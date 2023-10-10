@@ -15,29 +15,31 @@ namespace JokeFunction
         {
             get
             {
-                try
+                if (_jokeList == null)
                 {
-                    if (_jokeList == null)
+                    try
                     {
                         var json = File.ReadAllText("jokes.json");
                         _jokeList = JsonSerializer.Deserialize<Joke[]>(json);
                         _jokeList = _jokeList!.Where(f => f.question != null).ToArray();
+                        Console.WriteLine("Loaded Jokes from file.");
                     }
-                }
-                catch
-                {
-                    _jokeList = new Joke[1];
-                    _jokeList[0] = new Joke
+                    catch
                     {
-                        question = "Why did the file fail to load?",
-                        answer = "The app was knocking on the wrong fol-door.",
-                        author = "Grant Erickson",
-                        created = "10/10/2023",
-                        rating = 5
-                    };
-                    _jokeList[0].tags = new string[1];
-                    _jokeList[0].tags[0] = "files";
-                    _jokeList[0].text = $"{_jokeList[0].question}  {_jokeList[0].answer}";
+                        _jokeList = new Joke[1];
+                        _jokeList[0] = new Joke
+                        {
+                            question = "Why did the file fail to load?",
+                            answer = "The app was knocking on the wrong fol-door.",
+                            author = "Grant Erickson",
+                            created = "10/10/2023",
+                            rating = 5
+                        };
+                        _jokeList[0].tags = new string[1];
+                        _jokeList[0].tags[0] = "files";
+                        _jokeList[0].text = $"{_jokeList[0].question}  {_jokeList[0].answer}";
+                        Console.WriteLine("Joke file load failed. Loaded static jokes.");
+                    }
                 }
                 return _jokeList!;
             }
