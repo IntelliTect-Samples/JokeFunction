@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 
 namespace JokeFunction
 {
@@ -14,11 +15,29 @@ namespace JokeFunction
         {
             get
             {
-                if (_jokeList == null)
+                try
                 {
-                    var json = File.ReadAllText("jokes.json");
-                    _jokeList = JsonSerializer.Deserialize<Joke[]>(json);
-                    _jokeList = _jokeList!.Where(f => f.question != null).ToArray();
+                    if (_jokeList == null)
+                    {
+                        var json = File.ReadAllText("jokes.json");
+                        _jokeList = JsonSerializer.Deserialize<Joke[]>(json);
+                        _jokeList = _jokeList!.Where(f => f.question != null).ToArray();
+                    }
+                }
+                catch
+                {
+                    _jokeList = new Joke[1];
+                    _jokeList[0] = new Joke
+                    {
+                        question = "Why did the file fail to load?",
+                        answer = "The app was knocking on the wrong fol-door.",
+                        author = "Grant Erickson",
+                        created = "10/10/2023",
+                        rating = 5
+                    };
+                    _jokeList[0].tags = new string[1];
+                    _jokeList[0].tags[0] = "files";
+                    _jokeList[0].text = $"{_jokeList[0].question}  {_jokeList[0].answer}";
                 }
                 return _jokeList!;
             }
@@ -29,7 +48,7 @@ namespace JokeFunction
             var list = JokeList;
             if (search != null)
             {
-                list = list.Where(f => f.question.IndexOf(search,StringComparison.OrdinalIgnoreCase) >=0 ||
+                list = list.Where(f => f.question.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
                                        f.answer.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
                                        f.tagList.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
                                        f.author.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
