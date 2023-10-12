@@ -28,7 +28,7 @@ namespace JokeFunction
                     {
                         // Write all the files in root folder to the log to see why
                         // this fails when deployed to the function app
-                        _logger.LogInformation("File List");
+                        _logger.LogInformation($"File List from {Directory.GetCurrentDirectory()}");
                         foreach (var file in Directory.EnumerateFiles("."))
                         {
                             _logger.LogInformation(file);
