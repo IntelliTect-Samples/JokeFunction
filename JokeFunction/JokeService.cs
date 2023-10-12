@@ -9,7 +9,7 @@ namespace JokeFunction
     public class JokeService
     {
 
-        private Joke[]? _jokeList = null;
+        private static Joke[]? _jokeList = null;
 
         private Joke[] JokeList
         {
@@ -19,6 +19,15 @@ namespace JokeFunction
                 {
                     try
                     {
+                        // Write all the files in root folder to the log to see why
+                        // this fails when deployed to the function app
+                        Console.WriteLine("File List");
+                        foreach (var file in Directory.EnumerateFiles("*.*"))
+                        {
+                            Console.WriteLine(file);
+                        }
+
+                        Console.WriteLine("Reading jokes.json");
                         var json = File.ReadAllText("jokes.json");
                         _jokeList = JsonSerializer.Deserialize<Joke[]>(json);
                         _jokeList = _jokeList!.Where(f => f.question != null).ToArray();
