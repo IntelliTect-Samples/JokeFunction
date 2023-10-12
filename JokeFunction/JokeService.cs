@@ -29,7 +29,7 @@ namespace JokeFunction
                         // Write all the files in root folder to the log to see why
                         // this fails when deployed to the function app
                         _logger.LogInformation("File List");
-                        foreach (var file in Directory.EnumerateFiles("*.*"))
+                        foreach (var file in Directory.EnumerateFiles("."))
                         {
                             _logger.LogInformation(file);
                         }
