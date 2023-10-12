@@ -25,7 +25,7 @@ namespace JokeFunction
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             search = search ?? data?.search;
 
-            var js = new JokeService();
+            var js = new JokeService(log);
             var joke = js.GetRandomJoke(search);
             if (joke == null)
             {
