@@ -16,7 +16,7 @@ namespace JokeFunction
         [FunctionName("AddJoke")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
-            [Queue("outqueue"), StorageAccount("AzureWebJobsStorage")] ICollector<string> msg,
+            [ServiceBus("jokes-queue", Connection = "ServiceBusConnection")] ICollector<string> msg,
             ILogger log)
         {
             log.LogInformation("Add a joke");
