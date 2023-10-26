@@ -10,36 +10,28 @@ using Newtonsoft.Json;
 
 namespace JokeFunction
 {
-    public static class AddJoke
+    public static class SubmitJoke
     {
 
-        [FunctionName("AddJoke")]
-        public static IActionResult Run(
+        [FunctionName("SubmitJoke")]
+        public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
-            [CosmosDB(
-                databaseName: "ToDoItems",
-                containerName: "Items",
-                Connection = "CosmosDBConnection")]out dynamic document,
+            [ServiceBus("jokes-queue", Connection = "ServiceBusConnection")] ICollector<string> msg,
             ILogger log)
         {
-            log.LogInformation("Add a joke to the database");
+            log.LogInformation("Add a joke");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             Joke joke = JsonConvert.DeserializeObject<Joke>(requestBody);
 
             if (joke != null)
             {
-                joke.id = Guid.NewGuid();
-                document = joke;
-
-                log.LogInformation($"http triggered to add joke: {joke}");
-
-                return new OkObjectResult($"add joke");
+                msg.Add(JsonConvert.SerializeObject(joke));
+                // return new OkObjectResult($"joke added successfully");
             }
             else
             {
-                log.LogInformation("no joke!");
-                return new BadRequestObjectResult("Need a joke");
+                // return new BadRequestObjectResult("Need a joke");
             }
         }
     }

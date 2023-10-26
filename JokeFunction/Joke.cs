@@ -2,6 +2,7 @@
 {
     public class Joke
     {
+        public string id { get; set; }
         public string question { get; set; } = null!;
         public string answer { get; set; } = null!;
         public string text { get; set; } = null!;
