@@ -27,11 +27,11 @@ namespace JokeFunction
             if (joke != null)
             {
                 msg.Add(JsonConvert.SerializeObject(joke));
-                // return new OkObjectResult($"joke added successfully");
+                return new OkObjectResult($"joke added successfully");
             }
             else
             {
-                // return new BadRequestObjectResult("Need a joke");
+                return new BadRequestObjectResult("Need a joke");
             }
         }
     }

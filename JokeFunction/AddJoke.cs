@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.WebJobs.Extensions.CosmosDB;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -17,19 +17,19 @@ namespace JokeFunction
         public static IActionResult Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             [CosmosDB(
-                databaseName: "ToDoItems",
-                containerName: "Items",
+                databaseName: "Jokes",
+                containerName: "items",
                 Connection = "CosmosDBConnection")]out dynamic document,
             ILogger log)
         {
             log.LogInformation("Add a joke to the database");
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            string requestBody = new StreamReader(req.Body).ReadToEnd();
             Joke joke = JsonConvert.DeserializeObject<Joke>(requestBody);
 
             if (joke != null)
             {
-                joke.id = Guid.NewGuid();
+                joke.id = Guid.NewGuid().ToString();
                 document = joke;
 
                 log.LogInformation($"http triggered to add joke: {joke}");
@@ -38,6 +38,7 @@ namespace JokeFunction
             }
             else
             {
+                document = null;
                 log.LogInformation("no joke!");
                 return new BadRequestObjectResult("Need a joke");
             }
