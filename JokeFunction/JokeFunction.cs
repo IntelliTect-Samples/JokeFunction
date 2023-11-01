@@ -36,7 +36,7 @@ namespace JokeFunction
             // var joke = js.GetRandomJoke(search);
             if (joke == null)
             {
-                return new OkObjectResult($"No jokes found with Joke Id");
+                return new OkObjectResult($"No jokes found with Joke Id {req.Query["id"]} and author {req.Query["partitionKey"]}");
             }
             return new OkObjectResult(joke);
             
