@@ -15,7 +15,7 @@ namespace JokeFunction
 
         [FunctionName("SubmitJoke")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "Joke")] HttpRequest req,
             [ServiceBus("jokes-queue", Connection = "ServiceBusConnection")] ICollector<string> msg,
             ILogger log)
         {
