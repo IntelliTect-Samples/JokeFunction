@@ -1,0 +1,4 @@
+http://localhost:7071/api/Joke?id="03aa7791-b3b1-4271-8944-0432e0bf5ddc"&partitionKey="elijahmanor"
+
+http://localhost:7071/api/Joke?id=dc9c7796-a496-41dd-bb81-febc5b4451d3&partitionKey=phil
+
