@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +15,11 @@ public class Startup : FunctionsStartup
 
         builder.Services.AddScoped<JokeService>();
 
-        //builder.Services.AddSingleton<ILoggerProvider, MyLoggerProvider>();
+        builder.Services.AddStackExchangeRedisCache(options =>
+         {
+             options.Configuration = builder.GetContext().Configuration.GetValue<string>("RedisCacheConnectionString");
+             options.InstanceName = "Joke";
+         });
     }
 }
 
