@@ -15,7 +15,7 @@ namespace JokeFunction
 
         [FunctionName("AddJoke")]
         public static IActionResult Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "Joke")] HttpRequest req,
             [CosmosDB(
                 databaseName: "Jokes",
                 containerName: "items",
