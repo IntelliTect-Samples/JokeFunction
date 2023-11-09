@@ -1,8 +1,14 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using JokeFunction;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
-var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults()
-    .Build();
+var builder = new HostBuilder();
+builder.ConfigureFunctionsWorkerDefaults();
+//builder.ConfigureServices(services =>
+//{
+//    services.AddScoped<JokeService>();
+//});
 
+var host = builder.Build();
 host.Run();
 

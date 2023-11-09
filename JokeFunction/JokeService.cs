@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace JokeFunction
 {
@@ -75,6 +77,48 @@ namespace JokeFunction
             }
             var index = new Random().Next(list.Length);
             return list[index];
+        }
+
+
+        /// <summary>
+        ///  Get a random joke from the Cosmos DB
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        public async Task<Joke> GetRandomJoke(CosmosClient client, ILogger log)
+        {
+            Container container = client.GetDatabase("Jokes").GetContainer("items");
+
+            log.LogInformation($"Searching for Joke Count");
+
+            QueryDefinition queryDefinition = new QueryDefinition(
+                "SELECT value Count(i) FROM items i");
+
+            int count = 0;
+            using (FeedIterator<int> resultSet = container.GetItemQueryIterator<int>(queryDefinition))
+            {
+                count = (await resultSet.ReadNextAsync()).First();
+            }
+            log.LogInformation($"{count} jokes found");
+
+            // Random number between 0 and count
+            var rnd = new Random();
+            int offset = rnd.Next(count);
+
+            log.LogInformation($"Grabbing joke {offset} of {count}");
+
+
+            QueryDefinition queryDefinitionJoke = new QueryDefinition(
+                $"SELECT * FROM items i OFFSET {offset} LIMIT 1");
+
+            Joke? joke = null;
+            using (FeedIterator<Joke> resultSet = container.GetItemQueryIterator<Joke>(queryDefinitionJoke))
+            {
+                joke = (await resultSet.ReadNextAsync()).First();
+            }
+
+            return joke;
         }
     }
 }
