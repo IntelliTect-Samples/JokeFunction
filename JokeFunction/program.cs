@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using System;
 
-var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults()
-    .Build();
-
-host.Run();
+Console.WriteLine("Test");
 

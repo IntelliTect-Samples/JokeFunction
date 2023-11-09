@@ -25,7 +25,7 @@ namespace JokeFunction
             log.LogInformation("Add a joke to the database");
 
             string requestBody = new StreamReader(req.Body).ReadToEnd();
-            Joke joke = JsonConvert.DeserializeObject<Joke>(requestBody);
+            Joke joke = JsonConvert.DeserializeObject<Joke>(requestBody)!;
 
             if (joke != null)
             {
@@ -38,7 +38,7 @@ namespace JokeFunction
             }
             else
             {
-                document = null;
+                document = null!;
                 log.LogInformation("no joke!");
                 return new BadRequestObjectResult("Need a joke");
             }

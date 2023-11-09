@@ -22,7 +22,7 @@ namespace JokeFunction
             log.LogInformation("Add a joke");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            Joke joke = JsonConvert.DeserializeObject<Joke>(requestBody);
+            Joke joke = JsonConvert.DeserializeObject<Joke>(requestBody)!;
 
             if (joke != null)
             {

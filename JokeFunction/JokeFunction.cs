@@ -13,63 +13,27 @@ using System.Linq;
 
 namespace JokeFunction
 {
-    public static class JokeFunction
+    public class JokeFunction
     {
+        private JokeService _jokeService;
+
+        public JokeFunction(JokeService jokeService)
+        {
+            _jokeService = jokeService;
+        }
+        
         [FunctionName("GetRandomJoke")]
-        public static async Task<IActionResult> Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Joke")] HttpRequest req,
             [CosmosDB(
                 databaseName: "Jokes",
                 containerName: "items",
                     Connection = "CosmosDBConnection")] CosmosClient client,
-            //[CosmosDB(
-            //    databaseName: "Jokes",
-            //    containerName: "items",
-            //    Connection = "CosmosDBConnection",
-            //    Id = "{Query.id}",
-            //    PartitionKey = "{Query.partitionKey}")]Joke joke,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            // string? search = req.Query["search"];
-
-            // string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            // dynamic data = JsonConvert.DeserializeObject(requestBody);
-            // search = search ?? data?.search;
-
-            // var js = new JokeService(log);
-            // var joke = js.GetRandomJoke(search);
-            Container container = client.GetDatabase("Jokes").GetContainer("items");
-
-            log.LogInformation($"Searching for Joke Count");
-
-            QueryDefinition queryDefinition = new QueryDefinition(
-                "SELECT value Count(i) FROM items i");
-
-            int count = 0;
-            using (FeedIterator<int> resultSet = container.GetItemQueryIterator<int>(queryDefinition))
-            {
-                count = (await resultSet.ReadNextAsync()).First();
-            }
-            log.LogInformation($"{count} jokes found");
-
-            // Random number between 0 and count
-            var rnd = new Random();
-            int offset = rnd.Next(count);
-
-            log.LogInformation($"Grabbing joke {offset} of {count}");
-
-
-            QueryDefinition queryDefinitionJoke = new QueryDefinition(
-                $"SELECT * FROM items i OFFSET {offset} LIMIT 1");
-
-            Joke? joke = null;
-            using (FeedIterator<Joke> resultSet = container.GetItemQueryIterator<Joke>(queryDefinitionJoke))
-            {
-                joke = (await resultSet.ReadNextAsync()).First();
-            }
-
+            var joke = await _jokeService.GetRandomJoke(client, log);
 
             if (joke == null)
             {
