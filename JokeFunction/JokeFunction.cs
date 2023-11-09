@@ -13,23 +13,29 @@ using System.Linq;
 
 namespace JokeFunction
 {
-    public static class JokeFunction
+    public class JokeFunction
     {
+        private readonly JokeService _jokeService;
+
+        public JokeFunction(JokeService jokeService)
+        {
+            _jokeService = jokeService;
+        }
+
         [FunctionName("GetRandomJoke")]
-        public static async Task<IActionResult> Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Joke")] HttpRequest req,
             [CosmosDB(
                 databaseName: "Jokes",
                 containerName: "items",
                     Connection = "CosmosDBConnection")] CosmosClient client,
-            ILogger log, 
-            JokeService jokeService)
+            ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             // string? search = req.Query["search"];
 
-            var joke = await jokeService.GetRandomJoke(client, log);
+            var joke = await _jokeService.GetRandomJoke(client, log);
 
             if (joke == null)
             {
