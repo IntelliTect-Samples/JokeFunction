@@ -115,7 +115,7 @@ namespace JokeFunction
             return false;
         }
 
-        public async Task<Joke> GetJoke(string id, CosmosClient client, ILogger log)
+        public async Task<Joke?> GetJoke(string id, CosmosClient client, ILogger log)
         {
             Container container = client.GetDatabase("Jokes").GetContainer("items");
             
@@ -125,7 +125,7 @@ namespace JokeFunction
             Joke? joke = null;
             using (FeedIterator<Joke> resultSet = container.GetItemQueryIterator<Joke>(queryDefinitionJoke))
             {
-                joke = (await resultSet.ReadNextAsync()).First();
+                joke = (await resultSet.ReadNextAsync()).FirstOrDefault();
             }
 
             return joke;

@@ -24,6 +24,16 @@ namespace JokeFunction
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             Joke joke = JsonConvert.DeserializeObject<Joke>(requestBody)!;
 
+            if (string.IsNullOrWhiteSpace(joke.author) || string.IsNullOrWhiteSpace(joke.question) || string.IsNullOrWhiteSpace(joke.answer))
+            {
+                return new OkObjectResult($"joke must have a question, answer, and author.");
+            }
+
+            if (string.IsNullOrWhiteSpace(joke.text))
+            {
+                joke.text = $"Q: {joke.question}  A: {joke.answer}";
+            }
+
             if (joke != null)
             {
                 msg.Add(JsonConvert.SerializeObject(joke));
