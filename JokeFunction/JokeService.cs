@@ -13,7 +13,6 @@ namespace JokeFunction
     public class JokeService
     {
 
-        private static Joke[]? _jokeList = null;
         private ILogger _logger;
         
         public JokeService(ILogger logger)
