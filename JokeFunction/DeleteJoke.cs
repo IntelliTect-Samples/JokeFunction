@@ -13,10 +13,17 @@ using System.Linq;
 
 namespace JokeFunction
 {
-    public static class DeleteJoke
+    public class DeleteJoke
     {
+        private JokeService _jokeService;
+
+        public DeleteJoke(JokeService jokeService)
+        {
+            _jokeService = jokeService;
+        }
+
         [FunctionName("DeleteJoke")]
-        public static async Task<IActionResult> Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "Joke")] HttpRequest req,
             [CosmosDB(
                 databaseName: "Jokes",
@@ -26,13 +33,16 @@ namespace JokeFunction
         {
             log.LogInformation("Delete joke");
 
-            string? id = req.Query["id"];
-            string? partitionKey = req.Query["partitionKey"];
+            string requestBody = new StreamReader(req.Body).ReadToEnd();
+            Joke joke = JsonConvert.DeserializeObject<Joke>(requestBody)!;
 
-            Container container = client.GetDatabase("Jokes").GetContainer("items");
-            ItemResponse<Joke> jokeResponse = await container.DeleteItemAsync<Joke>(id, new PartitionKey(partitionKey));
-            log.LogInformation($"Deleted joke {partitionKey},{id}");
-            return new OkObjectResult($"Deleted joke {id}");
+            if (joke != null)
+            {
+                var result = await _jokeService.DeletePendingJoke(joke, client, log);
+                if (result) return new OkObjectResult("Joke Deleted from Pending");
+            }
+            return new BadRequestObjectResult("Joke not Deleted");
+
         }
     }
 }

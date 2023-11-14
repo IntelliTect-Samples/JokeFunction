@@ -13,31 +13,33 @@ using System.Linq;
 
 namespace JokeFunction
 {
-    public class JokeFunction
+    public class PendingJokes
     {
         private JokeService _jokeService;
 
-        public JokeFunction(JokeService jokeService)
+        public PendingJokes(JokeService jokeService)
         {
             _jokeService = jokeService;
         }
         
-        [FunctionName("GetRandomJoke")]
+        [FunctionName("PendingJokes")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "Joke")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "PendingJokes")] HttpRequest req,
             [CosmosDB(
                 databaseName: "Jokes",
-                containerName: "items",
+                containerName: "pendingItems",
                     Connection = "CosmosDBConnection")] CosmosClient client,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            var jokes = await _jokeService.GetRandomJoke(client, log);
+            var joke = await _jokeService.GetPendingJokes(client, log);
 
-
-            return new OkObjectResult(jokes);
-
+            if (joke == null)
+            {
+                return new OkObjectResult($"No jokes found with Joke Id {req.Query["id"]} and author {req.Query["partitionKey"]}");
+            }
+            return new OkObjectResult(joke);
         }
     }
 }
