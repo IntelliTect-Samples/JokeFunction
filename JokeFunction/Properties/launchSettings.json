@@ -1,9 +1,8 @@
 {
-    "profiles": {
-        "JokeFunction": {
-            "commandName": "Project",
-            "commandLineArgs": "--port 7257",
-            "launchBrowser": false
-        }
+  "profiles": {
+    "JokeFunction": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7071"
     }
+  }
 }

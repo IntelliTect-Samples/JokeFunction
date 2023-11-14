@@ -7,19 +7,27 @@ using Microsoft.Azure.WebJobs.Extensions.CosmosDB;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Microsoft.Azure.Cosmos;
+using System.Threading.Tasks;
 
 namespace JokeFunction
 {
-    public static class AddJoke
+    public class AddJoke
     {
+        private JokeService _jokeService;
+
+        public AddJoke(JokeService jokeService)
+        {
+            _jokeService = jokeService;
+        }
 
         [FunctionName("AddJoke")]
-        public static IActionResult Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "Joke")] HttpRequest req,
             [CosmosDB(
                 databaseName: "Jokes",
                 containerName: "items",
-                Connection = "CosmosDBConnection")]out dynamic document,
+                    Connection = "CosmosDBConnection")] CosmosClient client,
             ILogger log)
         {
             log.LogInformation("Add a joke to the database");
@@ -29,19 +37,21 @@ namespace JokeFunction
 
             if (joke != null)
             {
-                joke.id = Guid.NewGuid().ToString();
-                document = joke;
+                var result = true;
+                var existingJoke = await _jokeService.GetJoke(joke.id, client, log);
+                if (existingJoke == null)
+                {
+                    // Add the joke if it doesn't exist
+                    result = await _jokeService.AddJoke(joke, client, log);
+                }
 
-                log.LogInformation($"http triggered to add joke: {joke}");
-
-                return new OkObjectResult($"add joke");
+                if (result)
+                {
+                    result = await _jokeService.DeletePendingJoke(joke, client, log);
+                    if (result) return new OkObjectResult("Joke Removed from Pending and added to active");
+                }
             }
-            else
-            {
-                document = null!;
-                log.LogInformation("no joke!");
-                return new BadRequestObjectResult("Need a joke");
-            }
+            return new BadRequestObjectResult("Joke not accepted");
         }
     }
 }

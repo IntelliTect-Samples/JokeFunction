@@ -10,13 +10,14 @@
         public string created { get; set; } = null!;
         public string[] tags { get; set; } = null!;
         public int rating { get; set; }
+        public string? sentiment { get; set; } = null;
 
         private string? _tagList = null!;
         public string tagList
         {
             get
             {
-                if (_tagList == null) _tagList = string.Join(",",tags);
+                if (_tagList == null && tags != null) _tagList = string.Join(",",tags);
                 return _tagList!;
             }
         }

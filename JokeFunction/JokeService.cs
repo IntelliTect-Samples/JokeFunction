@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -19,66 +20,8 @@ namespace JokeFunction
         {
             _logger = logger;    
         }
-
-        private Joke[] JokeList
-        {
-            get
-            {
-                if (_jokeList == null)
-                {
-                    try
-                    {
-                        // Write all the files in root folder to the log to see why
-                        // this fails when deployed to the function app
-                        _logger.LogInformation($"File List from {Directory.GetCurrentDirectory()}");
-                        foreach (var file in Directory.EnumerateFiles("."))
-                        {
-                            _logger.LogInformation(file);
-                        }
-
-                        _logger.LogInformation("Reading jokes.json");
-                        var json = File.ReadAllText("jokes.json");
-                        _jokeList = JsonSerializer.Deserialize<Joke[]>(json);
-                        _jokeList = _jokeList!.Where(f => f.question != null).ToArray();
-                        _logger.LogInformation("Loaded Jokes from file.");
-                    }
-                    catch
-                    {
-                        _jokeList = new Joke[1];
-                        _jokeList[0] = new Joke
-                        {
-                            question = "Why did the file fail to load?",
-                            answer = "The app was knocking on the wrong fol-door.",
-                            author = "Grant Erickson",
-                            created = "10/10/2023",
-                            rating = 5
-                        };
-                        _jokeList[0].tags = new string[1];
-                        _jokeList[0].tags[0] = "files";
-                        _jokeList[0].text = $"{_jokeList[0].question}  {_jokeList[0].answer}";
-                        _logger.LogInformation("Joke file load failed. Loaded static jokes.");
-                    }
-                }
-                return _jokeList!;
-            }
-        }
-
-        public Joke? GetRandomJoke(string? search = null)
-        {
-            var list = JokeList;
-            if (search != null)
-            {
-                list = list.Where(f => f.question.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                       f.answer.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                       f.tagList.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                       f.author.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
-                    .ToArray();
-                if (!list.Any()) return null;
-            }
-            var index = new Random().Next(list.Length);
-            return list[index];
-        }
         
+
         public async Task<Joke> GetRandomJoke(CosmosClient client, ILogger log)
         {
             Container container = client.GetDatabase("Jokes").GetContainer("items");
@@ -114,5 +57,82 @@ namespace JokeFunction
             return joke;
 
         }
+
+        public async Task<IEnumerable<Joke>> GetPendingJokes(CosmosClient client, ILogger log)
+        {
+            Container container = client.GetDatabase("Jokes").GetContainer("PendingItems");
+
+            log.LogInformation($"Searching for Pending Jokes");
+
+            QueryDefinition queryDefinition = new QueryDefinition(
+                "SELECT * FROM PendingItems i");
+
+            List<Joke> jokes = new();
+            using (FeedIterator<Joke> resultSet = container.GetItemQueryIterator<Joke>(queryDefinition))
+            {
+                while (resultSet.HasMoreResults)
+                {
+                    jokes.AddRange(await resultSet.ReadNextAsync());
+                }
+            }
+
+            return jokes;
+
+        }
+
+        public async Task<bool> DeletePendingJoke(Joke joke, CosmosClient client, ILogger log)
+        {
+            Container container = client.GetDatabase("Jokes").GetContainer("PendingItems");
+
+            log.LogInformation($"Delete Pending Joke {joke.id} in {joke.author}");
+
+            var result = await container.DeleteItemAsync<Joke>(joke.id, new PartitionKey(joke.author));
+
+            if (result.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                log.LogInformation($"Deleted Pending Joke {joke.id} in {joke.author}");
+
+                return true;
+            }
+
+            log.LogInformation($"Failed to Delete Pending Joke {joke.id} in {joke.author}");
+            return false;
+        }
+
+        public async Task<bool> AddJoke(Joke joke, CosmosClient client, ILogger log)
+        {
+            Container container = client.GetDatabase("Jokes").GetContainer("items");
+
+            log.LogInformation($"Add Joke {joke.id} in {joke.author}");
+
+            var result = await container.CreateItemAsync<Joke>(joke);
+
+            if (result.StatusCode == System.Net.HttpStatusCode.Created)
+            {
+                log.LogInformation($"Added Joke {joke.id} in {joke.author}");
+
+                return true;
+            }
+
+            log.LogInformation($"Failed to Add Joke {joke.id} in {joke.author}");
+            return false;
+        }
+
+        public async Task<Joke?> GetJoke(string id, CosmosClient client, ILogger log)
+        {
+            Container container = client.GetDatabase("Jokes").GetContainer("items");
+
+            QueryDefinition queryDefinitionJoke = new QueryDefinition(
+                @$"SELECT * FROM items i WHERE i.id=""{id}""");
+
+            Joke? joke = null;
+            using (FeedIterator<Joke> resultSet = container.GetItemQueryIterator<Joke>(queryDefinitionJoke))
+            {
+                joke = (await resultSet.ReadNextAsync()).FirstOrDefault();
+            }
+
+            return joke;
+        }
+
     }
 }
